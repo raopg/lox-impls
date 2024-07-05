@@ -26,7 +26,7 @@ class Scanner(source: String) {
   }
 
   private def scanToken(): Unit = {
-    val c = getNext()
+    val c = advance()
     c match {
       case '(' => addToken(LEFT_PAREN)
       case ')' => addToken(RIGHT_PAREN)
@@ -38,13 +38,37 @@ class Scanner(source: String) {
       case '+' => addToken(PLUS)
       case ';' => addToken(SEMICOLON)
       case '*' => addToken(STAR)
-      case _   => Lox.error(line, "Unexpected character.")
+      case '!' => addToken(if (matchChar('=')) BANG_EQUAL else BANG)
+      case '=' => addToken(if (matchChar('=')) EQUAL_EQUAL else EQUAL)
+      case '<' => addToken(if (matchChar('=')) LESSER_EQUAL else LESSER)
+      case '>' => addToken(if (matchChar('=')) GREATER_EQUAL else GREATER)
+      case '/' => {
+
+        if (matchChar('/')) {
+          while (peek() != '\n' && !isAtEnd()) advance()
+        } else {
+          addToken(SLASH)
+        }
+
+      }
+
+      case _ => Lox.error(line, "Unexpected character.")
     }
   }
 
-  private def getNext(): Char = {
+  private def advance(): Char = {
     current += 1
     source.charAt(current - 1)
+  }
+
+  private def matchChar(expected: Char): Boolean = {
+    if (isAtEnd() || source.charAt(current) != expected) return false
+    current += 1
+    true
+  }
+
+  private def peek(): Char = {
+    if (isAtEnd()) '\u0000' else source.charAt(current)
   }
 
   private def addToken(`type`: TokenType, literal: Any = null): Unit = {
